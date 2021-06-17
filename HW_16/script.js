@@ -8,3 +8,4 @@ const mainPage = new MainPage(userTemplate, mainPageTemplate);
 function onLogin(){
   mainPage.init();
 }
+
