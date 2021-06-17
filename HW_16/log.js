@@ -1,11 +1,11 @@
 class LoginForm {
-    constructor(calback) {
+    constructor(onLoginCallback) {
       this.containerEl = document.querySelector('.container');
       this.formEl = document.getElementById('loginForm')
       this.emailInputEl = document.getElementById('email');
       this.passwordInputEl = document.getElementById('password');
-      this.errorEl = document.getElementById('errorText');    
-      this.onLogin = calback;
+      this.errorEl = document.getElementById('errorText');
+      this.onLogin = onLoginCallback;
   
       this.init();
     }
@@ -14,45 +14,35 @@ class LoginForm {
       this.formEl.addEventListener('submit', this._onSubmit.bind(this));
     }
   
-    dispose(){
+    dispose() {
       this.formEl.removeEventListener('submit', this._onSubmit.bind(this));
     }
   
     _onSubmit(e) {
       e.preventDefault();
-      this._checkUserCredentails(
-        this.emailInputEl.value,
-        this.passwordInputEl.value,
-        (response) => {
-          if (response.status >= 200 && response.status <= 300) {
-            this.dispose()
-            this.onLogin();
-          } else {
-            this.errorEl.innerText = response.data.error;
-            this.passwordInputEl.value = '';
-          }
+      const promise = this._checkUserCredentails(this.emailInputEl.value, this.passwordInputEl.value);
+  
+      promise.then(result => {
+        if (result.ok) {
+          this.dispose();
+          this.onLogin();
         }
-      );
+          return result.json();
+        })
+        .then(err => {
+          this.errorEl.innerText = err.error || 'something went wrong :('
+        })
     }
-    _checkUserCredentails(email, password, calback) {
-      const xhr = new XMLHttpRequest();
-      const data = {
-        email: email,
-        password: password,
-      }
-      xhr.open('POST', 'https://reqres.in/api/login', true);
-      xhr.setRequestHeader('Content-Type', 'application/JSON')
-      xhr.send(JSON.stringify(data));
-      xhr.onload = () => {
-        const response = {
-          status: xhr.status,
-          data: JSON.parse(xhr.response),
-        }
-        calback(response);
-      }
+    _checkUserCredentails(email, password) {
+      return fetch('https://reqres.in/api/login', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
     }
   }
-
-
-  // "email": "eve.holt@reqres.in",
-  //   "password": "cityslicka"
