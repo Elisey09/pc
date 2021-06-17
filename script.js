@@ -9,8 +9,6 @@ class LoginForm {
       this.init();
     }
   
-    // "email": "eve.holt@reqres.in",
-    //   "password": "cityslicka"
   
     init() {
       this.formEl.addEventListener('submit', this._onSubmit.bind(this));
@@ -52,3 +50,7 @@ class LoginForm {
   }
   
   const loginForm = new LoginForm();
+
+
+    // "email": "eve.holt@reqres.in",
+    //   "password": "cityslicka"

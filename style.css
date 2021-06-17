@@ -121,7 +121,7 @@
   }
   
   .container input {
-    background-color: #d6ffe6;
+    background-color: #395e47;
     margin-top: 10px;
     padding: 5px 15px;
     border-radius: 15px;
@@ -136,7 +136,7 @@
   }
   
   #errorText {
-    color: red;
+    color: rgb(179, 50, 50);
     font-size: 15px;
     position: relative;
     position: absolute;
