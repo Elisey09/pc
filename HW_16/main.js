@@ -1,7 +1,7 @@
 class MainPage {
-    constructor(userTemplate, mainPageTemplate) {
-      this.userTemplate = userTemplate.innerHTML;
-      this.mainPageTemplate = mainPageTemplate.innerHTML;
+    constructor(userElTemplate, mainPageElTemplate) {
+      this.userElTemplate = userElTemplate.innerHTML;
+      this.mainPageElTemplate = mainPageElTemplate.innerHTML;
       this.containerEl = document.querySelector('.container');
       this._usersListEl = null;
       this.currentPage = 1;
@@ -9,70 +9,68 @@ class MainPage {
     }
   
     init() {
-      this.containerEl.innerHTML = this.mainPageTemplate;
+      this.containerEl.innerHTML = this.mainPageElTemplate;
       this._usersListEl = document.querySelector('.usersList');
       document.querySelector('.prev').addEventListener('click', this._onPrevBtn.bind(this));
       document.querySelector('.next').addEventListener('click', this._onNextBtn.bind(this));
-      this._getUsersList(this._renderUserList.bind(this));
-      this._getTotalPages((response) => {
-        if (response.status >= 200 && response.status < 300) {
-          this.totalPages = response.totalPages;
-        }
-      });
+  
+      this._renderUserList();
+  
+      this._getTotalPages()
+        .then(result => this._ifOk(result))
+        .then(result => {
+          this.totalPages = result['total_pages'];
+        })
     }
   
-    _getTotalPages(calback) {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', `https://reqres.in/api/users`);
-      xhr.send();
-      xhr.onload = () => {
-        const response = {
-          status: xhr.status,
-          totalPages: JSON.parse(xhr.response).total_pages,
-        }
-        calback(response);
+    _getUsersList(page, onLoad) {
+      return fetch(`https://reqres.in/api/users?page=${page}`);
+    }
+    _renderUserList() {
+      this._getUsersList(this.currentPage)
+        .then(result => this._ifOk(result))
+        .then(users => {
+          this._usersListEl.innerHTML = '';
+          for (let i = 0; i < users.data.length; i++) {
+            const user = document.createElement("li");
+            user.className = 'user';
+            user.innerHTML = this.userElTemplate
+              .replace('{{avatar}}', users.data[i].avatar)
+              .replace('{{firstName}}', users.data[i].first_name)
+              .replace('{{secondName}}', users.data[i].last_name)
+              .replace('{{email}}', users.data[i].email);
+            this._usersListEl.append(user);
+          }
+        })
+        .catch(err => {
+          console.dir(err);
+          document.body.removeChild(this.containerEl);
+          alert('Something went wrong :(');
+          if(confirm('Reload the page?'))location.reload();
+        })
+    }
+  
+    _ifOk(result) {
+      if (result.ok) {
+        return result.json();
       }
+    }
+  
+    _getTotalPages() {
+      return fetch('https://reqres.in/api/users');
     }
   
     _onPrevBtn() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this._getUsersList(this._renderUserList.bind(this), this.currentPage);
+        this._renderUserList();
       }
     }
     _onNextBtn() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        this._getUsersList(this._renderUserList.bind(this), this.currentPage);
-      }
-    }
-  
-    _getUsersList(calback, page) {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', `https://reqres.in/api/users?page=${page}`);
-      xhr.send();
-      xhr.onload = () => {
-        const response = {
-          status: xhr.status,
-          users: JSON.parse(xhr.response).data,
-          page: JSON.parse(xhr.response).page,
-        }
-        calback(response);
-      }
-    }
-    _renderUserList(data) {
-      if (data.status >= 200 && data.status < 300) {
-        this._usersListEl.innerHTML = '';
-        for (let i = 0; i < data.users.length; i++) {
-          const user = document.createElement("li");
-          user.className = 'user';
-          user.innerHTML = this.userTemplate
-            .replace('{{avatar}}', data.users[i].avatar)
-            .replace('{{firstName}}', data.users[i].first_name)
-            .replace('{{secondName}}', data.users[i].last_name)
-            .replace('{{email}}', data.users[i].email);
-          this._usersListEl.append(user);
-        }
+        this._renderUserList();
       }
     }
   }
+  
